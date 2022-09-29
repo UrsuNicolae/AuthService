@@ -10,6 +10,6 @@ namespace AuthService
             
         }
 
-        public DbSet<AppUser> ApplicationUsers { get; set; }
+        public DbSet<User> ApplicationUsers { get; set; }
     }
 }
