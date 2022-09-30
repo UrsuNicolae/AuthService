@@ -43,6 +43,26 @@ namespace AuthService.Controllers
             return _mapper.Map<UserDto>(user);
         }
 
+        [HttpPost("Login")]
+        public async Task<ActionResult<UserDto>> Login(LoginDto userDto)
+        {
+            var user = await _context.ApplicationUsers.SingleOrDefaultAsync(u => u.UserName == userDto.Username);
+            if (user == null)
+            {
+                return BadRequest("Invalid credentials");
+            }
+
+            using var htmac = new HMACSHA512(user.PasswordSalt);
+            var computedHash = htmac.ComputeHash(Encoding.UTF8.GetBytes(userDto.Password));
+
+            for(int i = 0; i < computedHash.Length; i++)
+            {
+                if (computedHash[i] != user.PasswordHash[i]) return Unauthorized("Invalid credentials");
+            }
+
+            return Ok(user);
+        }
+
         private async Task<bool> UserExistsAsync(string userName)
         {
             return await _context.ApplicationUsers.AnyAsync(u => u.UserName.ToLower() == userName.ToLower());
