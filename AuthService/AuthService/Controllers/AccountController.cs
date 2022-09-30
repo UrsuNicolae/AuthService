@@ -4,12 +4,14 @@ using AuthService.Dtos;
 using AuthService.Models;
 using AuthService.Services.IServices;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace AuthService.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class AccountController : ControllerBase
     {
@@ -25,6 +27,7 @@ namespace AuthService.Controllers
         }
 
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<ActionResult<UserDto>> Register(RegisterDto userDto)
         {
             if (await UserExistsAsync(userDto.Username))
@@ -49,6 +52,7 @@ namespace AuthService.Controllers
         }
 
         [HttpPost("Login")]
+        [AllowAnonymous]
         public async Task<ActionResult<UserDto>> Login(LoginDto userDto)
         {
             var user = await _context.ApplicationUsers.SingleOrDefaultAsync(u => u.UserName == userDto.Username);
@@ -69,6 +73,12 @@ namespace AuthService.Controllers
             userToReturn.Token = _tokenService.CreateToken(user);
 
             return userToReturn;
+        }
+
+        [HttpGet("IsAuthorized")]
+        public ActionResult IsAuthorized()
+        {
+            return Ok();
         }
 
         private async Task<bool> UserExistsAsync(string userName)

@@ -9,6 +9,7 @@ namespace AuthService.Profiles
         public UserProfile()
         {
             CreateMap<User, UserDto>();
+            CreateMap<User, GetUserDto>();
         }
     }
 }
