@@ -2,6 +2,7 @@
 using System.Text;
 using AuthService.Dtos;
 using AuthService.Models;
+using AuthService.Services.IServices;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,11 +15,13 @@ namespace AuthService.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly ITokenService _tokenService;
 
-        public AccountController(ApplicationDbContext context, IMapper mapper)
+        public AccountController(ApplicationDbContext context, IMapper mapper, ITokenService tokenService)
         {
             _context = context;
             _mapper = mapper;
+            _tokenService = tokenService;
         }
 
         [HttpPost("register")]
@@ -40,7 +43,9 @@ namespace AuthService.Controllers
 
             _context.ApplicationUsers.Add(user);
             await _context.SaveChangesAsync();
-            return _mapper.Map<UserDto>(user);
+            var userToReturn = _mapper.Map<UserDto>(user);
+            userToReturn.Token = _tokenService.CreateToken(user);
+            return userToReturn;
         }
 
         [HttpPost("Login")]
@@ -60,7 +65,10 @@ namespace AuthService.Controllers
                 if (computedHash[i] != user.PasswordHash[i]) return Unauthorized("Invalid credentials");
             }
 
-            return Ok(user);
+            var userToReturn = _mapper.Map<UserDto>(user);
+            userToReturn.Token = _tokenService.CreateToken(user);
+
+            return userToReturn;
         }
 
         private async Task<bool> UserExistsAsync(string userName)
