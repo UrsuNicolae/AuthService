@@ -1,5 +1,8 @@
 using AuthService;
+using AuthService.Services;
+using AuthService.Services.IServices;
 using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -9,6 +12,7 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
