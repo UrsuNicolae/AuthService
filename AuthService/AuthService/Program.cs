@@ -33,7 +33,6 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
-//app.UseCorst()
 app.UseAuthentication();
 app.UseAuthorization();
 
