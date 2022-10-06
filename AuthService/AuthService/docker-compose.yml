@@ -1,0 +1,16 @@
+﻿version: '3'
+services: 
+  auth-service:
+    image: nicolaedockerid/authservice
+    ports:
+      - 8080:80
+  ms-sql-server:
+    image: mcr.microsoft.com/mssql/server:2017-latest-ubuntu
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "aDMIN123*"
+      MSSQL_PID: EXPRESS
+    ports:
+      - 1433:1433
+    #volumes:
+    #  - ~/sqlvolume:/var/opt/mssql

@@ -29,6 +29,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 var app = builder.Build();
+if (app.Environment.IsProduction())
+{
+    using var serviceScope = app.Services.CreateScope();
+    var context = serviceScope.ServiceProvider.GetService<ApplicationDbContext>()!;
+    context.Database.Migrate();
+}
 app.UseSwagger();
 app.UseSwaggerUI();
 
