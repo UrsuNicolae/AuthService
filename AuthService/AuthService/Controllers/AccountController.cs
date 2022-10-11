@@ -1,6 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using AuthService.Dtos;
+using AuthService.Filters;
 using AuthService.Models;
 using AuthService.Services.IServices;
 using AutoMapper;
@@ -28,57 +29,95 @@ namespace AuthService.Controllers
 
         [HttpPost("register")]
         [AllowAnonymous]
-        public async Task<ActionResult<UserDto>> Register(RegisterDto userDto)
+        public async Task<ActionResult<object>> Register(RegisterDto userDto)
         {
-            if (await UserExistsAsync(userDto.Username))
+            try
             {
-                return BadRequest($"User with name: {userDto.Username} already exists!");
+                if (await UserExistsAsync(userDto.Username))
+                {
+                    return BadRequest($"User with name: {userDto.Username} already exists!");
+                }
+
+                using var hmac = new HMACSHA512();
+
+                var user = new User()
+                {
+                    UserName = userDto.Username,
+                    PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(userDto.Password)),
+                    PasswordSalt = hmac.Key
+                };
+
+                _context.ApplicationUsers.Add(user);
+                await _context.SaveChangesAsync();
+                var userToReturn = _mapper.Map<UserDto>(user);
+                userToReturn.Token = _tokenService.CreateToken(user);
+                var result = new SuccessModel
+                {
+                    Data = userToReturn,
+                    Message = "User Created",
+                    Success = true
+                };
+                return result;
             }
-
-            using var hmac = new HMACSHA512();
-
-            var user = new User()
+            catch (Exception e)
             {
-                UserName = userDto.Username,
-                PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(userDto.Password)),
-                PasswordSalt = hmac.Key
-            };
-
-            _context.ApplicationUsers.Add(user);
-            await _context.SaveChangesAsync();
-            var userToReturn = _mapper.Map<UserDto>(user);
-            userToReturn.Token = _tokenService.CreateToken(user);
-            return userToReturn;
+                var result = new ErrorModel
+                {
+                    Error = e.Message,
+                    Success = false
+                };
+                return result;
+            }
         }
 
         [HttpPost("Login")]
         [AllowAnonymous]
-        public async Task<ActionResult<UserDto>> Login(LoginDto userDto)
+        public async Task<ActionResult<object>> Login(LoginDto userDto)
         {
-            var user = await _context.ApplicationUsers.SingleOrDefaultAsync(u => u.UserName == userDto.Username);
-            if (user == null)
+            try
             {
-                return BadRequest("Invalid credentials");
+                var user = await _context.ApplicationUsers.SingleOrDefaultAsync(u => u.UserName == userDto.Username);
+                if (user == null)
+                {
+                    return BadRequest("Invalid credentials");
+                }
+
+                using var htmac = new HMACSHA512(user.PasswordSalt);
+                var computedHash = htmac.ComputeHash(Encoding.UTF8.GetBytes(userDto.Password));
+
+                for (int i = 0; i < computedHash.Length; i++)
+                {
+                    if (computedHash[i] != user.PasswordHash[i]) return Unauthorized("Invalid credentials");
+                }
+
+                var userToReturn = _mapper.Map<UserDto>(user);
+                userToReturn.Token = _tokenService.CreateToken(user);
+                return new SuccessModel
+                {
+                    Data = userToReturn,
+                    Message = "User registered",
+                    Success = true
+                };
             }
-
-            using var htmac = new HMACSHA512(user.PasswordSalt);
-            var computedHash = htmac.ComputeHash(Encoding.UTF8.GetBytes(userDto.Password));
-
-            for(int i = 0; i < computedHash.Length; i++)
+            catch (Exception e)
             {
-                if (computedHash[i] != user.PasswordHash[i]) return Unauthorized("Invalid credentials");
+                return new ErrorModel
+                {
+                    Error = e.Message,
+                    Success = false
+                };
             }
-
-            var userToReturn = _mapper.Map<UserDto>(user);
-            userToReturn.Token = _tokenService.CreateToken(user);
-
-            return userToReturn;
         }
 
         [HttpGet("IsAuthorized")]
-        public ActionResult IsAuthorized()
+        public ActionResult<object> IsAuthorized()
         {
-            return Ok();
+            return new SuccessModel
+            {
+                Data = null,
+                Message = "User is authorized",
+                Success = true
+            };
         }
 
         private async Task<bool> UserExistsAsync(string userName)
