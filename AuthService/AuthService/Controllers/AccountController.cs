@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using AuthService.Dtos;
 using AuthService.Filters;
@@ -35,7 +36,11 @@ namespace AuthService.Controllers
             {
                 if (await UserExistsAsync(userDto.Username))
                 {
-                    return BadRequest($"User with name: {userDto.Username} already exists!");
+                    return new ErrorModel()
+                    {
+                        Error = $"User with name: {userDto.Username} already exists!",
+                        Success = false
+                    };
                 }
 
                 using var hmac = new HMACSHA512();
@@ -79,7 +84,11 @@ namespace AuthService.Controllers
                 var user = await _context.ApplicationUsers.SingleOrDefaultAsync(u => u.UserName == userDto.Username);
                 if (user == null)
                 {
-                    return BadRequest("Invalid credentials");
+                    return new ErrorModel
+                    {
+                        Error = "Invalid credentials",
+                        Success = false
+                    };
                 }
 
                 using var htmac = new HMACSHA512(user.PasswordSalt);
@@ -109,14 +118,29 @@ namespace AuthService.Controllers
             }
         }
 
-        [HttpGet("IsAuthorized")]
-        public ActionResult<object> IsAuthorized()
+        [HttpGet("GetSelf")]
+        public ActionResult<object> GetSelf()
         {
-            return new SuccessModel
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            if (identity != null)
             {
-                Data = null,
-                Message = "User is authorized",
-                Success = true
+                IEnumerable<Claim> claims = identity.Claims;
+                var userName = identity.FindFirst("userName").Value;
+                var userId = identity.FindFirst("userId").Value;
+                return new SuccessModel
+                {
+                    Data = new
+                    {
+                        userName, userId
+                    },
+                    Message = "User is authorized",
+                    Success = true
+                };
+            }
+            return new ErrorModel()
+            {
+                Error = "Could not get user claims",
+                Success = false
             };
         }
 

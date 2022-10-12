@@ -20,7 +20,8 @@ namespace AuthService.Services
         {
             var claims = new List<Claim>
             {
-                new (JwtRegisteredClaimNames.NameId, user.UserName)
+                new ("userName", user.UserName),
+                new ("userId", user.Id.ToString())
             };
 
             var creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha512Signature);
