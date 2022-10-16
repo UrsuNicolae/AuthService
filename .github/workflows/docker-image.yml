@@ -21,6 +21,6 @@ jobs:
       run:
         docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
     - name: Build the Docker image
-      run: docker build -t ${{secrets.DOCKER_USER}}/authservice ./../AuthService/AuthService/Dockerfile 
+      run: cd AuthService/AuthService/AuthService docker build ${{secrets.DOCKER_USER}}/authservice .
     - name: Docker Push
       run: docker push ${{secrets.DOCKER_USER}}/authservice
