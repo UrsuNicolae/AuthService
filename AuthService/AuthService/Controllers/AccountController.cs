@@ -12,8 +12,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AuthService.Controllers
 {
-    [ApiController]
-    [Authorize]
     [Route("api/[controller]")]
     public class AccountController : ControllerBase
     {
@@ -29,8 +27,7 @@ namespace AuthService.Controllers
         }
 
         [HttpPost("register")]
-        [AllowAnonymous]
-        public async Task<ActionResult<object>> Register(RegisterDto userDto)
+        public async Task<ActionResult<object>> Register([FromBody]RegisterDto userDto)
         {
             try
             {
@@ -76,8 +73,7 @@ namespace AuthService.Controllers
         }
 
         [HttpPost("Login")]
-        [AllowAnonymous]
-        public async Task<ActionResult<object>> Login(LoginDto userDto)
+        public async Task<ActionResult<object>> Login([FromBody] LoginDto userDto)
         {
             try
             {
@@ -119,6 +115,7 @@ namespace AuthService.Controllers
         }
 
         [HttpGet("GetSelf")]
+        [ServiceFilter(typeof(AuthorizationAttribute))]
         public ActionResult<object> GetSelf()
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
