@@ -13,10 +13,11 @@ namespace AuthService.Filters
             {
                 var response = new ErrorModel()
                 {
-                    Success = false,
-                    Error = "User is not authenticated or an invalid token was set."
+                    success = false,
+                    error = "User is not authenticated or an invalid token was set."
                 };
 
+                context.HttpContext.Response.ContentType = "application/json";
                 context.Result = new ObjectResult(response);
             };
         }

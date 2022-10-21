@@ -1,14 +1,13 @@
-﻿using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
-using AuthService.Dtos;
+﻿using AuthService.Dtos;
 using AuthService.Filters;
 using AuthService.Models;
 using AuthService.Services.IServices;
 using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace AuthService.Controllers
 {
@@ -35,8 +34,8 @@ namespace AuthService.Controllers
                 {
                     return new ErrorModel()
                     {
-                        Error = $"User with name: {userDto.Username} already exists!",
-                        Success = false
+                        error = $"User with name: {userDto.Username} already exists!",
+                        success = false
                     };
                 }
 
@@ -55,9 +54,9 @@ namespace AuthService.Controllers
                 userToReturn.Token = _tokenService.CreateToken(user);
                 var result = new SuccessModel
                 {
-                    Data = userToReturn,
-                    Message = "User Created",
-                    Success = true
+                    data = userToReturn,
+                    message = "User Created",
+                    success = true
                 };
                 return result;
             }
@@ -65,8 +64,8 @@ namespace AuthService.Controllers
             {
                 var result = new ErrorModel
                 {
-                    Error = e.Message,
-                    Success = false
+                    error = e.Message,
+                    success = false
                 };
                 return result;
             }
@@ -82,8 +81,8 @@ namespace AuthService.Controllers
                 {
                     return new ErrorModel
                     {
-                        Error = "Invalid credentials",
-                        Success = false
+                        error = "Invalid credentials",
+                        success = false
                     };
                 }
 
@@ -92,24 +91,28 @@ namespace AuthService.Controllers
 
                 for (int i = 0; i < computedHash.Length; i++)
                 {
-                    if (computedHash[i] != user.PasswordHash[i]) return Unauthorized("Invalid credentials");
+                    if (computedHash[i] != user.PasswordHash[i]) return new ErrorModel
+                    {
+                        error = "Invalid credentials",
+                        success = false
+                    };
                 }
 
                 var userToReturn = _mapper.Map<UserDto>(user);
                 userToReturn.Token = _tokenService.CreateToken(user);
                 return new SuccessModel
                 {
-                    Data = userToReturn,
-                    Message = "User registered",
-                    Success = true
+                    data = userToReturn,
+                    message = "User registered",
+                    success = true
                 };
             }
             catch (Exception e)
             {
                 return new ErrorModel
                 {
-                    Error = e.Message,
-                    Success = false
+                    error = e.Message,
+                    success = false
                 };
             }
         }
@@ -126,18 +129,18 @@ namespace AuthService.Controllers
                 var userId = identity.FindFirst("userId").Value;
                 return new SuccessModel
                 {
-                    Data = new
+                    data = new
                     {
                         userName, userId
                     },
-                    Message = "User is authorized",
-                    Success = true
+                    message = "User is authorized",
+                    success = true
                 };
             }
             return new ErrorModel()
             {
-                Error = "Could not get user claims",
-                Success = false
+                error = "Could not get user claims",
+                success = false
             };
         }
 

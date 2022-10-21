@@ -10,10 +10,11 @@ namespace AuthService.Filters
         {
             var result = new ObjectResult(new ErrorModel()
             {
-                Success = false,
-                Error = context.Exception.Message
+                success = false,
+                error = context.Exception.Message
             });
-           context.Result = result;
+            context.HttpContext.Response.ContentType = "application/json";
+            context.Result = result;
         }
     }
 }

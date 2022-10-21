@@ -12,12 +12,13 @@ namespace AuthService.Extensions
 
                 string json = JsonConvert.SerializeObject(new ErrorModel()
                 {
-                    Success = false,
-                    Error = "Route not found."
+                    success = false,
+                    error = "Route not found."
                 });
 
                 var bytes = Encoding.UTF8.GetBytes(json);
                 context.HttpContext.Response.StatusCode = 200;
+                context.HttpContext.Response.ContentType = "application/json";
                 await context.HttpContext.Response.Body.WriteAsync(bytes, 0, bytes.Length);
             });
         }
