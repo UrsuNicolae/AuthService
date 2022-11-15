@@ -1,18 +1,12 @@
-using System.Net;
-using System.Text;
-using AuthService;
+using AuthService.Data;
 using AuthService.Extensions;
 using AuthService.Filters;
-using AuthService.Models;
 using AuthService.Services;
 using AuthService.Services.IServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 

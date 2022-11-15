@@ -23,7 +23,6 @@ namespace AuthService.Filters
 
         public void OnActionExecuted(ActionExecutedContext context)
         {
-
             context.HttpContext.Response.ContentType = "application/json";
         }
     }
