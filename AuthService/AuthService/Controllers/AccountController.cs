@@ -145,6 +145,41 @@ namespace AuthService.Controllers
             };
         }
 
+        [HttpGet("Users/{id}")]
+        public async Task<ActionResult<object>> GetUserById(Guid id)
+        {
+            try
+            {
+                var user = await _context.ApplicationUsers.FirstOrDefaultAsync(u => u.Id == id);
+                if (user == null)
+                {
+                    return new ErrorModel
+                    {
+                        error = "UserNotFound",
+                        success = false
+                    };
+                }
+
+                var userToReturn = _mapper.Map<UserDto>(user);
+                return new SuccessModel
+                {
+                    data = userToReturn,
+                    message = "User returned",
+                    success = true
+                };
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return new ErrorModel
+                {
+                    error = e.Message,
+                    success = false
+                };
+            }
+        }
+
+
         private async Task<bool> UserExistsAsync(string userName)
         {
             return await _context.ApplicationUsers.AnyAsync(u => u.UserName.ToLower() == userName.ToLower());
