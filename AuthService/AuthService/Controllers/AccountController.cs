@@ -170,7 +170,6 @@ namespace AuthService.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError(e.Message);
                 return new ErrorModel
                 {
                     error = e.Message,
