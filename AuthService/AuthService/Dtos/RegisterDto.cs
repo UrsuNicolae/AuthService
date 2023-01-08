@@ -5,7 +5,8 @@ namespace AuthService.Dtos
     public class RegisterDto
     {
         [Required]
-        public string Username { get; set; }
+        [DataType(DataType.EmailAddress)]
+        public string Email { get; set; }
 
         [Required]
         [MinLength(4)]

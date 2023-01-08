@@ -20,7 +20,7 @@ namespace AuthService.Services
         {
             var claims = new List<Claim>
             {
-                new ("userName", user.UserName),
+                new ("userEmail", user.Email),
                 new ("userId", user.Id.ToString())
             };
 

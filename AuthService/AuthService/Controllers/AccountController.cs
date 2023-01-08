@@ -1,4 +1,5 @@
-﻿using AuthService.Data;
+﻿using System.ComponentModel.DataAnnotations;
+using AuthService.Data;
 using AuthService.Dtos;
 using AuthService.Filters;
 using AuthService.Models;
@@ -31,11 +32,11 @@ namespace AuthService.Controllers
         {
             try
             {
-                if (await UserExistsAsync(userDto.Username))
+                if (await UserExistsAsync(userDto.Email))
                 {
                     return new ErrorModel()
                     {
-                        error = $"User with name: {userDto.Username} already exists!",
+                        error = $"User with email: {userDto.Email} already exists!",
                         success = false
                     };
                 }
@@ -44,7 +45,7 @@ namespace AuthService.Controllers
 
                 var user = new User()
                 {
-                    UserName = userDto.Username,
+                    Email = userDto.Email,
                     PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(userDto.Password)),
                     PasswordSalt = hmac.Key
                 };
@@ -77,7 +78,7 @@ namespace AuthService.Controllers
         {
             try
             {
-                var user = await _context.ApplicationUsers.SingleOrDefaultAsync(u => u.UserName == userDto.Username);
+                var user = await _context.ApplicationUsers.SingleOrDefaultAsync(u => u.Email == userDto.Email);
                 if (user == null)
                 {
                     return new ErrorModel
@@ -126,13 +127,13 @@ namespace AuthService.Controllers
             if (identity != null)
             {
                 IEnumerable<Claim> claims = identity.Claims;
-                var userName = identity.FindFirst("userName").Value;
+                var userEmail = identity.FindFirst("userEmail").Value;
                 var userId = identity.FindFirst("userId").Value;
                 return new SuccessModel
                 {
                     data = new
                     {
-                        userName, userId
+                        userEmail, userId
                     },
                     message = "User is authorized",
                     success = true
@@ -145,12 +146,12 @@ namespace AuthService.Controllers
             };
         }
 
-        [HttpGet("Users/{id}")]
-        public async Task<ActionResult<object>> GetUserById(Guid id)
+        [HttpGet("Users/{email}")]
+        public async Task<ActionResult<object>> GetUserByEmail(string email)
         {
             try
             {
-                var user = await _context.ApplicationUsers.FirstOrDefaultAsync(u => u.Id == id);
+                var user = await _context.ApplicationUsers.FirstOrDefaultAsync(u => u.Email == email);
                 if (user == null)
                 {
                     return new ErrorModel
@@ -161,6 +162,7 @@ namespace AuthService.Controllers
                 }
 
                 var userToReturn = _mapper.Map<UserDto>(user);
+                userToReturn.Token = _tokenService.CreateToken(user);
                 return new SuccessModel
                 {
                     data = userToReturn,
@@ -181,7 +183,7 @@ namespace AuthService.Controllers
 
         private async Task<bool> UserExistsAsync(string userName)
         {
-            return await _context.ApplicationUsers.AnyAsync(u => u.UserName.ToLower() == userName.ToLower());
+            return await _context.ApplicationUsers.AnyAsync(u => u.Email.ToLower() == userName.ToLower());
         }
     }
 }
