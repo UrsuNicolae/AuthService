@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace AuthService.Controllers
 {
@@ -28,7 +29,7 @@ namespace AuthService.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<object>> Register([FromBody]RegisterDto userDto)
+        public async Task<ActionResult<object>> Register([FromBody] RegisterDto userDto)
         {
             try
             {
@@ -133,7 +134,8 @@ namespace AuthService.Controllers
                 {
                     data = new
                     {
-                        userEmail, userId
+                        userEmail,
+                        userId
                     },
                     message = "User is authorized",
                     success = true
@@ -149,6 +151,14 @@ namespace AuthService.Controllers
         [HttpGet("Users/{email}")]
         public async Task<ActionResult<object>> GetUserByEmail(string email)
         {
+            if (!await ValidateEmailAsync(email))
+            {
+                return new ErrorModel()
+                {
+                    error = "Invalid email!",
+                    success = false
+                };
+            }
             try
             {
                 var user = await _context.ApplicationUsers.FirstOrDefaultAsync(u => u.Email == email);
@@ -180,7 +190,11 @@ namespace AuthService.Controllers
             }
         }
 
-
+        private Task<bool> ValidateEmailAsync(string email)
+        {
+            return Task.Run(() => Regex.IsMatch(email,
+                @"^([\w-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$"));
+        }
         private async Task<bool> UserExistsAsync(string userName)
         {
             return await _context.ApplicationUsers.AnyAsync(u => u.Email.ToLower() == userName.ToLower());
